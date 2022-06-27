@@ -1,0 +1,68 @@
+version: '3.3'
+
+services:
+    maria_db:
+        image: mariadb:latest # 
+        volumes:
+          - ./data_db:/var/lib/mariadb # 
+        environment:
+            MYSQL_ROOT_PASSWORD: admin_digital2021 # 
+            MYSQL_DATABASE: proj_copy_wp_db # 
+            MYSQL_USER: Jul1 # 
+            MYSQL_PASSWORD: digital2021 # 
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:4.9 # 
+        links:
+          - maria_db # 
+        environment:
+          VIRTUAL_HOST: projetwp.real
+          PMA_HOST: maria_db
+          PMA_PORT: 3306
+        ports:
+          - '9080:80' #
+
+    wordpress:
+        image: wordpress:latest # 
+        depends_on:
+            - maria_db # 
+        ports:
+            - 8600:80 # 
+        environment:
+            VIRTUAL_HOST: projetwp.real
+            WORDPRESS_DB_HOST: maria_db:3306
+            WORDPRESS_DB_USER: Jul1 # 
+            WORDPRESS_DB_PASSWORD: digital2021 # 
+            WORDPRESS_DB_NAME: proj_copy_wp_db # 
+            WORDPRESS_TABLE_PREFIX: pcwp_db_ # 
+        working_dir: /var/www/html # 
+        volumes:
+          - .:/var/www/html/ # 
+        sysctls:
+         # 
+          - net.ipv4.ip_unprivileged_port_start=0
+    #      
+    ftp:
+      image: stilliard/pure-ftpd:latest
+      #
+      ports:
+        - "18004:21"
+        - "30000-30009:30000-30009"
+      deploy:
+        replicas: 1
+        restart_policy:
+          condition: on-failure
+      environment:
+        PUBLICHOST: 127.0.0.1 #
+        FTP_USER_NAME: "Jul1" #
+        FTP_USER_PASS: "digital2021" #
+        FTP_USER_HOME: "/var/www/html"
+        FTP_USER_UID: 33 #
+        FTP_USER_GID: 33 #
+      volumes:
+        - .:/var/www/html
+ 
+volumes:
+    data_db:
+
+    #ligne de commentaire de merde
